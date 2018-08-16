@@ -3,11 +3,6 @@
 /**
  * The plugin bootstrap file
  *
- * This file is read by WordPress to generate the plugin information in the plugin
- * admin area. This file also includes all of the dependencies used by the plugin,
- * registers the activation and deactivation functions, and defines a function
- * that starts the plugin.
- *
  * @link              https://echo5digital.com
  * @since             1.0.0
  * @package           Woocommerce_Bookings_Resource_Slot_Pricing
@@ -15,7 +10,7 @@
  * @wordpress-plugin
  * Plugin Name:       WooCommerce Bookings Resource Slot Pricing
  * Plugin URI:        #
- * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
+ * Description:       This plugin adds a price change field to invidual resource time slots to alter base cost.
  * Version:           1.0.0
  * Author:            Joshua Flowers
  * Author URI:        https://echo5digital.com
