@@ -55,6 +55,29 @@ class Woocommerce_Bookings_Resource_Slot_Pricing_Admin {
 	}
 
 	/**
+	 * Register the JavaScript for the admin area.
+	 *
+	 * @since    1.0.0
+	 */
+	public function enqueue_scripts() {
+
+		/**
+		 * This function is provided for demonstration purposes only.
+		 *
+		 * An instance of this class should be passed to the run() function
+		 * defined in Woocommerce_Bookings_Resource_Slot_Pricing_Loader as all of the hooks are defined
+		 * in that particular class.
+		 *
+		 * The Woocommerce_Bookings_Resource_Slot_Pricing_Loader will then create the relationship
+		 * between the defined hooks and the functions defined in this
+		 * class.
+		 */
+
+		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/woocommerce-bookings-resource-slot-pricing-admin.js', array( 'jquery' ), $this->version, false );
+
+	}
+
+	/**
 	 * Remove deault WC Bookings meta box
 	 *
 	 * @return void

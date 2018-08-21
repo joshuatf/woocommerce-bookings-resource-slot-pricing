@@ -154,6 +154,7 @@ class Woocommerce_Bookings_Resource_Slot_Pricing {
 
 		$plugin_admin = new Woocommerce_Bookings_Resource_Slot_Pricing_Admin( $this->get_plugin_name(), $this->get_version() );
 
+		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 		$this->loader->add_action( 'add_meta_boxes', $plugin_admin, 'remove_default_resource_meta_box', 20 );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'add_resource_meta_box', 10 );
 		

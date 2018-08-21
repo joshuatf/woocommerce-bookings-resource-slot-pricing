@@ -50,6 +50,7 @@
 				<option value="days" <?php selected( $availability['type'], 'days' ); ?>><?php _e( 'Range of days', 'woocommerce-bookings' ); ?></option>
 				<optgroup label="<?php _e( 'Time Ranges', 'woocommerce-bookings' ); ?>">
 					<option value="time" <?php selected( $availability['type'], 'time' ); ?>><?php _e( 'Time Range (all week)', 'woocommerce-bookings' ); ?></option>
+					<option value="time:weekday_month_range" <?php selected( $availability['type'], 'time:weekday_month_range' ); ?>><?php _e( 'Date Range with weekday &amp; time', 'woocommerce-bookings' ); ?></option>
 					<option value="time:range" <?php selected( $availability['type'], 'time:range' ); ?>><?php _e( 'Date Range with time', 'woocommerce-bookings' ); ?></option>
 					<?php foreach ( $intervals['days'] as $key => $label ) : ?>
 						<option value="time:<?php echo $key; ?>" <?php selected( $availability['type'], 'time:' . $key ); ?>><?php echo $label; ?></option>
@@ -61,9 +62,15 @@
 	<td style="border-right:0;">
 	<div class="bookings-datetime-select-from">
 		<div class="select from_day_of_week">
+			<?php
+			$from_day_of_week = $availability['from'];
+			if ( 'time:weekday_month_range' === $availability['type'] && ! empty( $availability['from_day'] ) ) {
+				$from_day_of_week = $availability['from_day'];
+			}
+			?>
 			<select name="wc_booking_availability_from_day_of_week[]">
 				<?php foreach ( $intervals['days'] as $key => $label ) : ?>
-					<option value="<?php echo $key; ?>" <?php selected( isset( $availability['from'] ) && $availability['from'] == $key, true ); ?>><?php echo $label; ?></option>
+					<option value="<?php echo $key; ?>" <?php selected( isset( $from_day_of_week ) && $from_day_of_week == $key, true ); ?>><?php echo $label; ?></option>
 				<?php endforeach; ?>
 			</select>
 		</div>
@@ -86,7 +93,7 @@
 			$from_date = '';
 			if ( 'custom' === $availability['type'] && ! empty( $availability['from'] ) ) {
 				$from_date = $availability['from'];
-			} elseif ( 'time:range' === $availability['type'] && ! empty( $availability['from_date'] ) ) {
+			} elseif ( ( 'time:range' === $availability['type'] || 'time:weekday_month_range' === $availability['type'] ) && ! empty( $availability['from_date'] ) ) {
 				$from_date = $availability['from_date'];
 			}
 			?>
@@ -108,9 +115,15 @@
 	<td>
 	<div class='bookings-datetime-select-to'>
 		<div class="select to_day_of_week">
+			<?php
+			$to_day_of_week = $availability['to'];
+			if ( 'time:weekday_month_range' === $availability['type'] && ! empty( $availability['to_day'] ) ) {
+				$to_day_of_week = $availability['to_day'];
+			}
+			?>
 			<select name="wc_booking_availability_to_day_of_week[]">
 				<?php foreach ( $intervals['days'] as $key => $label ) : ?>
-					<option value="<?php echo $key; ?>" <?php selected( isset( $availability['to'] ) && $availability['to'] == $key, true ); ?>><?php echo $label; ?></option>
+					<option value="<?php echo $key; ?>" <?php selected( isset( $to_day_of_week ) && $to_day_of_week == $key, true ); ?>><?php echo $label; ?></option>
 				<?php endforeach; ?>
 			</select>
 		</div>
@@ -133,7 +146,7 @@
 			$to_date = '';
 			if ( 'custom' === $availability['type'] && ! empty( $availability['to'] ) ) {
 				$to_date = $availability['to'];
-			} elseif ( 'time:range' === $availability['type'] && ! empty( $availability['to_date'] ) ) {
+			} elseif ( ( 'time:range' === $availability['type'] || 'time:weekday_month_range' === $availability['type'] ) && ! empty( $availability['to_date'] ) ) {
 				$to_date = $availability['to_date'];
 			}
 			?>

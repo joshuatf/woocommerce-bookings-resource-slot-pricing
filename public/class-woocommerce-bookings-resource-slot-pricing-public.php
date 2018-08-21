@@ -69,8 +69,7 @@ class Woocommerce_Bookings_Resource_Slot_Pricing_Public {
 		if ( isset( $data['_resource_id'] ) ) {
 			$resource = $booking_form->product->get_resource( $data['_resource_id'] );
 			$availability_rules = $resource->get_availability();
-			$processed_rules = WC_Product_Booking_Rule_Manager::process_availability_rules( $availability_rules, 'resource' );
-
+			$processed_rules = $this->process_rules( $availability_rules );
 			$timestamp = $data['_start_date'];
 
 			while ( $timestamp < $data['_end_date'] ) {
@@ -83,6 +82,65 @@ class Woocommerce_Bookings_Resource_Slot_Pricing_Public {
 			}
 		}
 		return $booking_cost + $additional_cost;
+	}
+
+	public function process_rules( $rules ) {
+		$processed_rules = array();
+		foreach ( $rules as $rule ) {
+			if ( $rule['type'] == 'time:weekday_month_range' ) {
+				$processed_rules[] = $this->process_custom_range_type_rule( $rule );
+			} else {
+				$processed_rules[] = WC_Product_Booking_Rule_Manager::process_availability_rules( array( $rule ), 'resource' )[0];
+			}
+		}
+		return $processed_rules;
+	}
+
+	/**
+	 * Get a range and put value inside each day
+	 *
+	 * @param  string $from
+	 * @param  string $to
+	 * @param  mixed $value
+	 * @return array
+	 */
+	private static function process_custom_range_type_rule( $rule ) {
+		$value = $rule['range'];
+		$availability = array();
+		$processed_rule = array(
+			'type' => 'time:weekday_month_range'
+		);
+		$from_date    = strtotime( $rule['from_date'] );
+		$to_date      = strtotime( $rule['to_date'] );
+		$from_day     = $rule['from_day'];
+		$to_day       = $rule['to_day'];
+		$value		  = array(
+			'from' => $rule['from'],
+			'to' => $rule['to'],
+			'rule' => $rule['bookable'] == 'yes' ? 1 : null
+		);
+
+		if ( $to_date < $from_date ) {
+			return;
+		}
+		// We have at least 1 day, even if from_date == to_date
+		$number_of_days = 1 + ( $to_date - $from_date ) / 60 / 60 / 24;
+
+		for ( $i = 0; $i < $number_of_days; $i ++ ) {
+			$year  = date( 'Y', strtotime( "+{$i} days", $from_date ) );
+			$month = date( 'n', strtotime( "+{$i} days", $from_date ) );
+			$day   = date( 'j', strtotime( "+{$i} days", $from_date ) );
+			$day_of_week = date( 'w', strtotime( "+{$i} days", $from_date ) );
+
+			if ( ( $to_day >= $from_day && $day_of_week >= $from_day && $day_of_week <= $to_day )
+				|| ( $to_day < $from_day && ( $day_of_week >= $from_day || $day_of_week <= $to_day ) ) ) {
+					$availability[ $year ][ $month ][ $day ] = $value;
+			}
+		}
+
+		$processed_rule['range'] = $availability;
+		
+		return $processed_rule;
 	}
 
 	/**
@@ -142,8 +200,11 @@ class Woocommerce_Bookings_Resource_Slot_Pricing_Public {
 				}
 				break;
 			case 'time:range':
+			case 'time:weekday_month_range':
 				if ( false === $default && ( isset( $range[ $year ][ $month ][ $day ] ) ) ) {
-					$bookable = $range[ $year ][ $month ][ $day ]['rule'];
+					if ( $hour >= $range[ $year ][ $month ][ $day ]['from'] && $hour < $range[ $year ][ $month ][ $day ]['to'] ) {	
+						$bookable = $range[ $year ][ $month ][ $day ]['rule'];
+					}
 				}
 				break;
 		}
