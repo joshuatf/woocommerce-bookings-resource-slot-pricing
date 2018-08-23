@@ -86,8 +86,9 @@ class Woocommerce_Bookings_Resource_Slot_Pricing_Public {
 
 	public function process_rules( $rules ) {
 		$processed_rules = array();
+		$custom_types = array( 'time:weekday_date_range', 'time:weekday_month_range' );
 		foreach ( $rules as $rule ) {
-			if ( $rule['type'] == 'time:weekday_month_range' ) {
+			if ( in_array( $rule['type'], $custom_types ) ) {
 				$processed_rules[] = $this->process_custom_range_type_rule( $rule );
 			} else {
 				$processed_rules[] = WC_Product_Booking_Rule_Manager::process_availability_rules( array( $rule ), 'resource' )[0];
@@ -105,42 +106,74 @@ class Woocommerce_Bookings_Resource_Slot_Pricing_Public {
 	 * @return array
 	 */
 	private static function process_custom_range_type_rule( $rule ) {
-		$value = $rule['range'];
 		$availability = array();
 		$processed_rule = array(
-			'type' => 'time:weekday_month_range'
+			'type' => $rule['type']
 		);
-		$from_date    = strtotime( $rule['from_date'] );
-		$to_date      = strtotime( $rule['to_date'] );
-		$from_day     = $rule['from_day'];
-		$to_day       = $rule['to_day'];
-		$value		  = array(
+		$value = array(
 			'from' => $rule['from'],
 			'to' => $rule['to'],
 			'rule' => $rule['bookable'] == 'yes' ? 1 : null
 		);
 
-		if ( $to_date < $from_date ) {
-			return;
+		switch( $rule['type'] ) {
+			case 'time:weekday_date_range':
+				$from_date    = strtotime( $rule['from_date'] );
+				$to_date      = strtotime( $rule['to_date'] );
+				$from_day     = $rule['from_day'];
+				$to_day       = $rule['to_day'];
+		
+				if ( $to_date < $from_date ) {
+					return;
+				}
+				// We have at least 1 day, even if from_date == to_date
+				$number_of_days = 1 + ( $to_date - $from_date ) / 60 / 60 / 24;
+		
+				for ( $i = 0; $i < $number_of_days; $i ++ ) {
+					$year  = date( 'Y', strtotime( "+{$i} days", $from_date ) );
+					$month = date( 'n', strtotime( "+{$i} days", $from_date ) );
+					$day   = date( 'j', strtotime( "+{$i} days", $from_date ) );
+					$day_of_week = date( 'w', strtotime( "+{$i} days", $from_date ) );
+		
+					if ( ( $to_day >= $from_day && $day_of_week >= $from_day && $day_of_week <= $to_day )
+						|| ( $to_day < $from_day && ( $day_of_week >= $from_day || $day_of_week <= $to_day ) ) ) {
+							$availability[ $year ][ $month ][ $day ] = $value;
+					}
+				}
+				break;
+			case 'time:weekday_month_range':
+				$months = Woocommerce_Bookings_Resource_Slot_Pricing_Public::get_range( $rule['from_month'], $rule['to_month'], 12 );
+				$weekdays = Woocommerce_Bookings_Resource_Slot_Pricing_Public::get_range( $rule['from_day'], $rule['to_day'], 7 );
+				foreach ( $months as $month ) {
+					foreach ( $weekdays as $weekday ) {
+						$availability[ $month ][ $weekday ] = $value;
+					}
+				}
+				break;
 		}
-		// We have at least 1 day, even if from_date == to_date
-		$number_of_days = 1 + ( $to_date - $from_date ) / 60 / 60 / 24;
 
-		for ( $i = 0; $i < $number_of_days; $i ++ ) {
-			$year  = date( 'Y', strtotime( "+{$i} days", $from_date ) );
-			$month = date( 'n', strtotime( "+{$i} days", $from_date ) );
-			$day   = date( 'j', strtotime( "+{$i} days", $from_date ) );
-			$day_of_week = date( 'w', strtotime( "+{$i} days", $from_date ) );
-
-			if ( ( $to_day >= $from_day && $day_of_week >= $from_day && $day_of_week <= $to_day )
-				|| ( $to_day < $from_day && ( $day_of_week >= $from_day || $day_of_week <= $to_day ) ) ) {
-					$availability[ $year ][ $month ][ $day ] = $value;
-			}
-		}
 
 		$processed_rule['range'] = $availability;
 		
 		return $processed_rule;
+	}
+
+	/**
+	 * Get range of numbers with limit
+	 *
+	 * @param int $start
+	 * @param int $end
+	 * @param int $max
+	 * @return array
+	 */
+	public static function get_range( $start, $end, $max ) {
+		if ( $start > $end ) {
+			$range = range( $start, $max );
+			$range = array_merge( $range, range( 1, $end ) );
+		} else {
+			$range = range( $start, $end );
+		}
+		return $range;
 	}
 
 	/**
@@ -200,10 +233,17 @@ class Woocommerce_Bookings_Resource_Slot_Pricing_Public {
 				}
 				break;
 			case 'time:range':
-			case 'time:weekday_month_range':
+			case 'time:weekday_date_range':
 				if ( false === $default && ( isset( $range[ $year ][ $month ][ $day ] ) ) ) {
 					if ( $hour >= $range[ $year ][ $month ][ $day ]['from'] && $hour < $range[ $year ][ $month ][ $day ]['to'] ) {	
 						$bookable = $range[ $year ][ $month ][ $day ]['rule'];
+					}
+				}
+				break;
+			case 'time:weekday_month_range':
+				if ( false === $default && ( isset( $range[ $month ][ $day_of_week ] ) ) ) {
+					if ( $hour >= $range[ $month ][ $day_of_week ]['from'] && $hour < $range[ $month ][ $day_of_week ]['to'] ) {	
+						$bookable = $range[ $month ][ $day_of_week ]['rule'];
 					}
 				}
 				break;

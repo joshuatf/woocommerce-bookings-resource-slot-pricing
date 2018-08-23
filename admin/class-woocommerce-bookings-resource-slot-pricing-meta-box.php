@@ -189,12 +189,22 @@ class WC_Bookings_Resource_Slot_Pricing_Meta_Box {
 					$availability[ $i ]['from_date'] = wc_clean( $_POST['wc_booking_availability_from_date'][ $i ] );
 					$availability[ $i ]['to_date']   = wc_clean( $_POST['wc_booking_availability_to_date'][ $i ] );
 					break;
-				case 'time:weekday_month_range':
+				case 'time:weekday_date_range':
 					$availability[ $i ]['from'] = wc_booking_sanitize_time( $_POST['wc_booking_availability_from_time'][ $i ] );
 					$availability[ $i ]['to']   = wc_booking_sanitize_time( $_POST['wc_booking_availability_to_time'][ $i ] );
 
 					$availability[ $i ]['from_date'] = wc_clean( $_POST['wc_booking_availability_from_date'][ $i ] );
 					$availability[ $i ]['to_date']   = wc_clean( $_POST['wc_booking_availability_to_date'][ $i ] );
+
+					$availability[ $i ]['from_day'] = wc_clean( $_POST['wc_booking_availability_from_day_of_week'][ $i ] );
+					$availability[ $i ]['to_day']   = wc_clean( $_POST['wc_booking_availability_to_day_of_week'][ $i ] );
+					break;
+				case 'time:weekday_month_range':
+					$availability[ $i ]['from'] = wc_booking_sanitize_time( $_POST['wc_booking_availability_from_time'][ $i ] );
+					$availability[ $i ]['to']   = wc_booking_sanitize_time( $_POST['wc_booking_availability_to_time'][ $i ] );
+
+					$availability[ $i ]['from_month'] = wc_clean( $_POST['wc_booking_availability_from_month'][ $i ] );
+					$availability[ $i ]['to_month']   = wc_clean( $_POST['wc_booking_availability_to_month'][ $i ] );
 
 					$availability[ $i ]['from_day'] = wc_clean( $_POST['wc_booking_availability_from_day_of_week'][ $i ] );
 					$availability[ $i ]['to_day']   = wc_clean( $_POST['wc_booking_availability_to_day_of_week'][ $i ] );

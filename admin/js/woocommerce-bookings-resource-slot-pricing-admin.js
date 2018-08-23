@@ -6,8 +6,11 @@
 		var tr    = $(this).closest('tr')
 		var row   = $(tr);
 
-		if ( value == 'time:weekday_month_range' ) {
+		if ( value == 'time:weekday_date_range' ) {
             row.find('.from_date, .to_date').show();
+			row.find('.from_day_of_week, .to_day_of_week').show();
+		} else if ( value == 'time:weekday_month_range' ) {
+            row.find('.from_month, .to_month').show();
 			row.find('.from_day_of_week, .to_day_of_week').show();
         }
 	});
