@@ -69,13 +69,16 @@ class Woocommerce_Bookings_Resource_Slot_Pricing_Public {
 		if ( isset( $data['_resource_id'] ) ) {
 			$resource = $booking_form->product->get_resource( $data['_resource_id'] );
 			$availability_rules = $resource->get_availability();
+			usort( $availability_rules, function( $a, $b ) {
+				return $b['priority'] <=> $a['priority'];
+			} );
 			$processed_rules = $this->process_rules( $availability_rules );
 			$timestamp = $data['_start_date'];
 
 			while ( $timestamp < $data['_end_date'] ) {
 				foreach ( $processed_rules as $key => $rule ) {
 					if ( $this->check_if_timestamp_in_rule( $timestamp, $rule, false ) ) {
-						$additional_cost += isset( $availability_rules[ $key ][ 'price_change' ] ) ? $availability_rules[ $key ][ 'price_change' ] * $data[ '_qty' ] : 0;
+						$additional_cost = isset( $availability_rules[ $key ][ 'price_change' ] ) ? $availability_rules[ $key ][ 'price_change' ] * $data[ '_qty' ] : 0;
 					}
 				}
 				$timestamp = strtotime( '+1 day', $timestamp );
